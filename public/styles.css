@@ -37,7 +37,7 @@ h2 { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:600
 .upload-symbol { display:grid; place-items:center; margin-bottom:16px; color:var(--accent); }
 .upload-symbol .icon { width:27px; height:27px; stroke-width:1.4; }
 .drop-zone strong { font-size:14px; font-weight:550; }
-.drop-zone>span:not(.upload-symbol):not(
+.drop-zone #file-hint { font-size:12px; color:var(--muted); margin-top:8px; }
 .text-button { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:7px 2px; border:0; background:none; color:var(--accent); font-size:12px; font-weight:550; text-decoration:underline; text-decoration-color:transparent; text-underline-offset:4px; transition:text-decoration-color 160ms; }
 .text-button .icon { width:14px; height:14px; }
 .text-button:hover { text-decoration-color:currentColor; }
