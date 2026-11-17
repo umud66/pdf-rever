@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f6f2">
+  <meta name="description" content="PDF 偶数页倒序，奇数页位置不变。本地处理。">
+  <title>翻页 · 手动双面打印助手</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="vendor/pdf-lib.min.js" defer></script>
+  <script src="pdf-core.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-print" viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 17H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6zM18 12h.01"/></symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24"><path d="M12 16V3m-5 5 5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8m-8 4h5"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+  </svg>
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="翻页，返回首页"><span class="brand-mark"><svg class="icon"><use href="#icon-print"/></svg></span><span class="brand-name">翻页</span></a>
+    <a class="help-link" href="#print-guide">怎么打印 <span aria-hidden="true">↗</span></a>
+  </header>
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div><h1 id="page-title">PDF 偶数页倒序</h1><p class="intro-description">奇数页位置不变，偶数页逆序排列。</p></div>
+    </section>
+    <section class="workbench" aria-label="PDF 页序调整">
+      <div class="source-panel">
+        <h2><span class="step-marker">1</span>选择 PDF</h2>
+        <input id="file-input" type="file" accept=".pdf,application/pdf" hidden>
+        <button class="drop-zone" id="drop-zone" type="button" aria-describedby="file-hint"><span class="upload-symbol"><svg class="icon"><use href="#icon-upload"/></svg></span><strong>选择或拖入 PDF</strong><span id="file-hint">仅在本机处理</span></button>
+        <div class="file-info" id="file-info" hidden><div class="file-symbol"><svg class="icon"><use href="#icon-file"/></svg></div><div class="file-details"><strong id="file-name"></strong><span id="file-meta"></span></div><button class="icon-button" id="remove-file" type="button" aria-label="移除文件，重新选择"><svg class="icon"><use href="#icon-close"/></svg></button></div>
+        <button class="text-button replace-button" id="replace-file" type="button" hidden>更换 PDF</button>
+        <div class="blank-option" id="blank-option" hidden><label><input id="pad-blank" type="checkbox"><span><strong>补一张空白页</strong><small>先补齐偶数页数，再重排。</small></span></label><p id="blank-explanation"></p></div>
+        <p class="error-message" id="error-message" role="alert" hidden></p>
+        <p class="file-status" id="file-status" role="status" aria-live="polite"></p>
+      </div>
+      <div class="result-panel">
+        <h2><span class="step-marker">2</span>确认页序</h2>
+        <p class="preview-empty" id="preview-empty">选择 PDF 后显示页序</p>
+        <div id="preview-content" hidden>
+        <p class="preview-description">数字为原 PDF 页码</p>
+        <div class="sequence-block"><div class="sequence-heading"><h3>原始顺序</h3><span id="source-count"></span></div><div class="page-sequence" id="source-sequence" role="list" aria-label="原始页序"></div></div>
+        <div class="sequence-block result-sequence-block"><div class="sequence-heading"><h3>处理后顺序</h3><span id="result-count"></span></div><div class="page-sequence" id="result-sequence" role="list" aria-label="处理后页序"></div></div>
+        <details class="full-sequence" id="full-sequence" hidden><summary>查看全部页码</summary><p id="full-sequence-text"></p></details>
+        </div>
+        <div class="download-area"><button class="primary-button" id="download-button" type="button" disabled><svg class="icon"><use href="#icon-download"/></svg><span id="download-label">下载 PDF</span><svg class="icon button-arrow"><use href="#icon-arrow"/></svg></button><p class="download-note" id="download-note" role="status" aria-live="polite">原文件不变</p></div>
+      </div>
+    </section>
+    <section class="print-guide" id="print-guide" aria-labelledby="guide-title">
+      <h2 id="guide-title">打印顺序</h2>
+      <ol class="guide-steps">
+        <li><span class="guide-number">1</span><h3>正序打印奇数页</h3></li>
+        <li><span class="guide-number">2</span><h3>放回纸张</h3></li>
+        <li><span class="guide-number">3</span><h3>正序打印偶数页</h3></li>
+      </ol>
+      <p class="guide-tip">使用下载后的 PDF。首次先少量试印，确认放纸方向。</p>
+    </section>
+  </main>
+</body>
+</html>

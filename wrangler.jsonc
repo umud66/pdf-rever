@@ -1,0 +1,6 @@
+{
+  "name": "pdf-rever",
+  "assets": {
+    "directory": "./public"
+  }
+}
