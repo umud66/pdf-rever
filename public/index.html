@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f5f6f2">
   <meta name="description" content="PDF 偶数页倒序，奇数页位置不变。本地处理。">
   <title>翻页 · 手动双面打印助手</title>
@@ -42,11 +42,20 @@
       </div>
       <div class="result-panel">
         <h2><span class="step-marker">2</span>确认页序</h2>
+        <fieldset class="export-options" id="export-options">
+          <legend>下载范围</legend>
+          <div class="export-modes">
+            <label><input type="radio" name="download-mode" value="all" checked><span>全部页</span></label>
+            <label><input type="radio" name="download-mode" value="odd"><span>仅奇数页</span></label>
+            <label><input type="radio" name="download-mode" value="even"><span>仅偶数页</span></label>
+          </div>
+        </fieldset>
         <p class="preview-empty" id="preview-empty">选择 PDF 后显示页序</p>
         <div id="preview-content" hidden>
         <p class="preview-description">数字为原 PDF 页码</p>
         <div class="sequence-block"><div class="sequence-heading"><h3>原始顺序</h3><span id="source-count"></span></div><div class="page-sequence" id="source-sequence" role="list" aria-label="原始页序"></div></div>
         <div class="sequence-block result-sequence-block"><div class="sequence-heading"><h3>处理后顺序</h3><span id="result-count"></span></div><div class="page-sequence" id="result-sequence" role="list" aria-label="处理后页序"></div></div>
+        <p class="preview-description" id="result-empty" hidden>没有可下载的偶数页</p>
         <details class="full-sequence" id="full-sequence" hidden><summary>查看全部页码</summary><p id="full-sequence-text"></p></details>
         </div>
         <div class="download-area"><button class="primary-button" id="download-button" type="button" disabled><svg class="icon"><use href="#icon-download"/></svg><span id="download-label">下载 PDF</span><svg class="icon button-arrow"><use href="#icon-arrow"/></svg></button><p class="download-note" id="download-note" role="status" aria-live="polite">原文件不变</p></div>
@@ -55,11 +64,11 @@
     <section class="print-guide" id="print-guide" aria-labelledby="guide-title">
       <h2 id="guide-title">打印顺序</h2>
       <ol class="guide-steps">
-        <li><span class="guide-number">1</span><h3>正序打印奇数页</h3></li>
+        <li><span class="guide-number">1</span><h3>打印奇数页文件</h3></li>
         <li><span class="guide-number">2</span><h3>放回纸张</h3></li>
-        <li><span class="guide-number">3</span><h3>正序打印偶数页</h3></li>
+        <li><span class="guide-number">3</span><h3>打印偶数页文件</h3></li>
       </ol>
-      <p class="guide-tip">使用下载后的 PDF。首次先少量试印，确认放纸方向。</p>
+      <p class="guide-tip">分别下载奇、偶数页文件，各自打印全部页面。首次先少量试印，确认放纸方向。</p>
     </section>
   </main>
 </body>

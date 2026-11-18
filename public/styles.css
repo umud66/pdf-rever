@@ -2,7 +2,7 @@
 * { box-sizing:border-box; }
 [hidden] { display:none !important; }
 html { scroll-behavior:smooth; scroll-padding-top:24px; }
-body { margin:0; }
+body { margin:0; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
 button,input { font:inherit; }
 button,a { -webkit-tap-highlight-color:transparent; }
 button { cursor:pointer; }
@@ -28,6 +28,15 @@ h1 { font-size:28px; line-height:1.4; font-weight:650; letter-spacing:-.025em; t
 .source-panel,.result-panel { padding:30px; min-width:0; }
 .source-panel { display:flex; flex-direction:column; border-right:1px solid var(--line); }
 .result-panel { display:flex; flex-direction:column; }
+.export-options { min-width:0; padding:0; margin:20px 0 0; border:0; }
+.export-options legend { margin-bottom:9px; padding:0; font-size:12px; color:var(--muted); }
+.export-modes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+.export-modes label { position:relative; min-width:0; cursor:pointer; }
+.export-modes input { position:absolute; opacity:0; width:1px; height:1px; }
+.export-modes span { display:flex; align-items:center; justify-content:center; min-height:44px; padding:10px 4px; border:1px solid var(--line); border-radius:6px; font-size:13px; line-height:1.5; background:var(--surface); }
+.export-modes input:checked+span { background:#edf3e8; border-color:var(--accent); color:var(--accent); font-weight:600; }
+.export-modes input:focus-visible+span { outline:3px solid var(--focus); outline-offset:3px; }
+.export-options:disabled span { opacity:.55; cursor:wait; }
 .preview-empty { display:grid; place-items:center; flex:1; min-height:215px; color:var(--muted); font-size:13px; }
 h2 { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:600; line-height:1.5; }
 .step-marker { display:inline-grid; place-items:center; width:23px; height:23px; border:1px solid #d7dfd1; border-radius:50%; font-size:12px; color:var(--accent); font-weight:550; font-variant-numeric:tabular-nums; }
@@ -73,6 +82,7 @@ h2 { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:600
 .page-tile.even { border-color:#a8b99c; background:#edf3e8; color:#38552d; }
 .page-tile.even::after { border-color:#a8b99c; background:#dde8d3; }
 .page-tile.blank { font-size:11px; font-weight:500; }
+.page-tile.compact { font-size:14px; }
 .page-tile.ellipsis { border:none; background:none; font-size:18px; }
 .page-tile.ellipsis::after { display:none; }
 .result-sequence-block { margin-top:16px; }
@@ -106,16 +116,42 @@ h2 { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:600
   .page-sequence { gap:5px; } .page-tile { min-height:50px; font-size:20px; } 
   .guide-steps { gap:14px; } 
 }
-@media (max-width:600px) {
-   .site-header { min-height:74px; padding:18px 20px; }
-  .brand-name { font-size:20px; } .brand-mark { width:32px; height:32px; border-radius:8px; } main { padding:0 20px; }
-  .intro { padding-top:24px; padding-bottom:24px; } h1 { font-size:25px; } .intro-description { margin-top:8px; }
-  .workbench { grid-template-columns:1fr; border-radius:12px; } .source-panel,.result-panel { padding:24px; }
+@media (max-width:720px) {
+  .site-header { min-height:68px; padding:12px 16px; }
+  .brand-name { font-size:20px; } .brand-mark { width:32px; height:32px; border-radius:8px; } main { padding:0 16px; }
+  .help-link { display:flex; align-items:center; min-height:44px; font-size:14px; }
+  .intro { padding:22px 0; } h1 { font-size:25px; } .intro-description { margin-top:8px; font-size:14px; }
+  .workbench { grid-template-columns:1fr; border-radius:12px; } .source-panel,.result-panel { padding:20px 18px; }
   .source-panel { border-right:0; border-bottom:1px solid var(--line); }
-  .drop-zone { min-height:176px; margin-top:20px; padding-top:22px; padding-bottom:20px; }
-    .page-sequence { gap:7px; }
-  .page-tile { min-height:63px; font-size:23px; } .download-area { margin-top:22px; }
-    .guide-steps { grid-template-columns:1fr; gap:20px; }
-  .guide-steps h3 { font-size:13px; margin-bottom:4px; }  .guide-number { font-size:13px; }
+  .drop-zone { min-height:128px; margin-top:16px; padding:20px 12px; }
+  .drop-zone strong { font-size:16px; }
+  .drop-zone #file-hint { font-size:13px; }
+  .upload-symbol { margin-bottom:12px; }
+  .file-info { margin-top:16px; padding:14px 10px; gap:8px; }
+  .file-details strong { font-size:14px; }
+  .file-details span { font-size:13px; }
+  .icon-button { min-width:44px; min-height:44px; }
+  .text-button { min-height:44px; padding:10px 4px; font-size:14px; }
+  .blank-option label { min-height:44px; }
+  .blank-option input { width:20px; height:20px; }
+  .blank-option strong,.blank-option small,.blank-option p { font-size:14px; }
+  .error-message,.file-status { font-size:14px; }
+  .export-options { margin-top:16px; }
+  .export-options legend,.export-modes span { font-size:14px; }
+  .preview-empty { min-height:80px; font-size:14px; }
+  .preview-description,.sequence-heading h3,.sequence-heading>span { font-size:13px; }
+  .sequence-block { margin-top:18px; }
+  .page-sequence { gap:6px; }
+  .page-tile { min-height:52px; font-size:20px; }
+  .page-tile.blank,.page-tile.compact { font-size:13px; }
+  .download-area { margin-top:20px; }
+  .primary-button { min-height:50px; font-size:16px; }
+  .download-note { font-size:13px; }
+  .full-sequence { font-size:14px; }
+  .full-sequence summary { min-height:44px; padding:12px 0; }
+  .print-guide { margin-top:26px; }
+  .guide-steps { grid-template-columns:1fr; gap:16px; }
+  .guide-steps h3 { font-size:14px; margin-bottom:0; } .guide-number { font-size:14px; }
+  .guide-tip { font-size:13px; }
 }
 @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { transition:none !important; } }

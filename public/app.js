@@ -1,10 +1,17 @@
 (function () {
   'use strict';
-  const ui = Object.fromEntries(['file-input','drop-zone','file-info','file-name','file-meta','remove-file','replace-file','blank-option','pad-blank','blank-explanation','error-message','file-status','preview-empty','preview-content','source-count','result-count','source-sequence','result-sequence','full-sequence','full-sequence-text','download-button','download-label','download-note'].map(id => [id,document.getElementById(id)]));
+  const ui = Object.fromEntries(['file-input','drop-zone','file-info','file-name','file-meta','remove-file','replace-file','blank-option','pad-blank','blank-explanation','error-message','file-status','export-options','preview-empty','preview-content','source-count','result-count','source-sequence','result-sequence','result-empty','full-sequence','full-sequence-text','download-button','download-label','download-note'].map(id => [id,document.getElementById(id)]));
+  const modeInputs = Array.from(document.querySelectorAll('input[name="download-mode"]'));
   let current = null;
   let busy = false;
   let dragDepth = 0;
   const liveUrls = new Set();
+  function exportSettings() {
+    const mode = modeInputs.find(input => input.checked).value;
+    const pad = Boolean(current && mode !== 'odd' && ui['pad-blank'].checked && current.count % 2 === 1);
+    const order = current ? globalThis.DuplexPDF.makePageOrder(current.count,pad,mode) : [];
+    return { mode,pad,order };
+  }
   function formatBytes(size) {
     if (size < 1024) return `${size} B`;
     if (size < 1024*1024) return `${(size/1024).toFixed(1)} KB`;
@@ -13,8 +20,8 @@
   function showError(message) { ui['error-message'].textContent=message; ui['error-message'].hidden=!message; }
   function setBusy(value,message='') {
     busy=value;
-    for (const name of ['drop-zone','remove-file','replace-file','pad-blank','file-input']) ui[name].disabled=value;
-    ui['download-button'].disabled=value||!current;
+    for (const name of ['drop-zone','remove-file','replace-file','pad-blank','file-input','export-options']) ui[name].disabled=value;
+    ui['download-button'].disabled=value||!exportSettings().order.length;
     ui['file-status'].textContent=message;
     document.querySelector('.workbench').setAttribute('aria-busy',String(value));
   }
@@ -33,6 +40,7 @@
         const even=item.page===null||item.page%2===0;
         tile.className=`page-tile${even?' even':''}${item.page===null?' blank':''}`;
         tile.textContent=item.page===null?'空白':String(item.page);
+        if (item.page > 99) tile.classList.add('compact');
         tile.setAttribute('aria-label',`${title}第 ${item.index+1} 页：${item.page===null?'新增空白页':`原第 ${item.page} 页`}`);
         tile.title=tile.getAttribute('aria-label');
       }
@@ -40,11 +48,15 @@
     }
   }
   function renderPreview() {
+    const { mode,pad,order } = exportSettings();
     ui['preview-empty'].hidden=Boolean(current);
     ui['preview-content'].hidden=!current;
-    ui['download-label'].textContent='下载 PDF';
-    ui['download-note'].textContent='原文件不变';
+    ui['download-label'].textContent={all:'下载 PDF',odd:'下载奇数页',even:'下载偶数页'}[mode];
+    ui['download-note'].textContent=current && !order.length ? '没有可下载的偶数页' : {all:'原文件不变',odd:'奇数页正序',even:'偶数页倒序'}[mode];
     ui['download-note'].classList.remove('success');
+    ui['download-button'].disabled=busy||!order.length;
+    ui['blank-option'].hidden=!current||current.count%2===0||mode==='odd';
+    ui['result-empty'].hidden=!current||order.length>0;
     if (!current) {
       ui['source-sequence'].replaceChildren();
       ui['result-sequence'].replaceChildren();
@@ -55,8 +67,6 @@
       return;
     }
     const count=current.count;
-    const pad=Boolean(current&&ui['pad-blank'].checked&&count%2===1);
-    const order=globalThis.DuplexPDF.makePageOrder(count,pad);
     const source=Array.from({length:count},(_,index)=>index+1);
     if (pad) source.push(null);
     renderSequence(ui['source-sequence'],source,'重排前');
@@ -65,13 +75,12 @@
     ui['result-count'].textContent=`${order.length} 页`;
     ui['full-sequence'].hidden=order.length<=12;
     ui['full-sequence-text'].textContent=order.map(page=>page??'空白').join('，');
-    ui['blank-explanation'].textContent=pad?`${count} → ${order.length} 页，空白位于第 2 页。`:'';
+    ui['blank-explanation'].textContent=pad?`空白位于${mode==='even'?'偶数页文件第 1 页':'输出第 2 页'}。`:'';
   }
   function renderFile() {
     const loaded=Boolean(current);
     ui['drop-zone'].hidden=loaded; ui['file-info'].hidden=!loaded;
     ui['replace-file'].hidden=!loaded;
-    ui['blank-option'].hidden=!loaded||current.count%2===0;
     if (loaded) {
       ui['file-name'].textContent=current.name; ui['file-name'].title=current.name;
       ui['file-meta'].textContent=`${current.count} 页 · ${formatBytes(current.bytes.byteLength)}`;
@@ -107,17 +116,18 @@
   async function downloadPdf() {
     if (!current||busy) return;
     const selected=current;
-    const pad=ui['pad-blank'].checked&&selected.count%2===1;
+    const { mode,pad,order } = exportSettings();
+    if (!order.length) return;
     showError(''); setBusy(true,'正在生成新 PDF，请稍候…');
     ui['download-label'].textContent='正在生成 PDF…';
     ui['download-note'].textContent='文件较大时，生成可能需要更长时间';
     try {
       await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
-      const result=await globalThis.DuplexPDF.reorderPdf(selected.bytes,pad);
+      const result=await globalThis.DuplexPDF.reorderPdf(selected.bytes,pad,mode);
       const blob=new Blob([result.bytes],{type:'application/pdf'});
       const url=URL.createObjectURL(blob); liveUrls.add(url);
       const link=document.createElement('a'); link.href=url;
-      link.download=globalThis.DuplexPDF.outputFilename(selected.name,pad);
+      link.download=globalThis.DuplexPDF.outputFilename(selected.name,pad,mode);
       document.body.append(link); link.click(); link.remove();
       setTimeout(()=>{ URL.revokeObjectURL(url); liveUrls.delete(url); },60000);
       ui['download-note'].textContent=`${result.outputCount} 页 PDF 已开始下载`;
@@ -133,6 +143,7 @@
   ui['file-input'].addEventListener('change',event=>loadFile(event.target.files[0]));
   ui['download-button'].addEventListener('click',downloadPdf);
   ui['pad-blank'].addEventListener('change',renderPreview);
+  for (const input of modeInputs) input.addEventListener('change',renderPreview);
   ui['remove-file'].addEventListener('click',()=>{
     current=null; ui['pad-blank'].checked=false; ui['full-sequence'].open=false;
     showError(''); setBusy(false); renderFile(); ui['drop-zone'].focus();
